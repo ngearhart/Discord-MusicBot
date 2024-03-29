@@ -32,7 +32,7 @@ module.exports = {
             if (!guild) {
                 return interaction.reply({ content: `\`${id}\` is not a valid guild ID`, ephemeral: true });
             }
-
+                try {
             await guild.leave();
             return interaction.reply({ content: `Left guild \`${id}\``, ephemeral: true });
         } catch (error) {
