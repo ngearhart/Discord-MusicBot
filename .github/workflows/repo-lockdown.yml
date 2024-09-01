@@ -1,0 +1,19 @@
+name: 'Repo Lockdown'
+
+on:
+  pull_request_target:
+    types: opened
+
+permissions:
+  pull-requests: write
+
+jobs:
+  action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dessant/repo-lockdown@v4
+        with:
+          pr-comment: >
+            This repository does not accept pull requests,
+            see the [README](https://git.dpaste.org/dmb/Discord-MusicBot/src/branch/repo-lockdown/#contributors) for details.
+          skip-closed-pr-comment: true

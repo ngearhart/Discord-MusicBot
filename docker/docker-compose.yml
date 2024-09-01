@@ -51,7 +51,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   lavalink:
-    image: fredboat/lavalink:3
+    image: fredboat/lavalink:3.7.12
     container_name: lavalink
     restart: unless-stopped
     hostname: docker.lavalink

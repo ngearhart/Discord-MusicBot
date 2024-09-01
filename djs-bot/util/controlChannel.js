@@ -153,12 +153,15 @@ const updateNowPlaying = async (player, track) => {
 
 		const emb = trackStartedEmbed({ track, player });
 
-		const nowPlaying = await client.channels.cache
-			.get(player.textChannel)
-			.send({ embeds: [emb] })
-			.catch(client.warn);
+		try {
+			const nowPlaying = await client.channels.cache
+				.get(player.textChannel)
+				.send({ embeds: [emb] });
 
-		player.setNowplayingMessage(client, nowPlaying);
+			player.setNowplayingMessage(client, nowPlaying);
+		} catch (error) {
+			client.warn(error);
+		}
 	});
 };
 

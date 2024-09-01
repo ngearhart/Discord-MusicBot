@@ -127,8 +127,8 @@ const command = new SlashCommand()
                   name: "Added to queue",
                   iconURL: client.config.iconURL,
                 })
-                .setURL(res.tracks[0].uri)
-                .setThumbnail(res.tracks[0].displayThumbnail("maxresdefault"))
+                .setURL(trackForPlay.tracks[0].uri)
+                .setThumbnail(trackForPlay.tracks[0].displayThumbnail("maxresdefault"))
                 .setDescription(
                   `[${trackForPlay?.tracks[0]?.title}](${trackForPlay?.tracks[0].uri})` ||
                     "No Title"
@@ -141,9 +141,9 @@ const command = new SlashCommand()
                   },
                   {
                     name: "Duration",
-                    value: res.tracks[0].isStream
+                    value: trackForPlay.tracks[0].isStream
                       ? `\`LIVE :red_circle:\``
-                      : `\`${client.ms(res.tracks[0].duration, {
+                      : `\`${client.ms(trackForPlay.tracks[0].duration, {
                           colonNotation: true,
                         })}\``,
                     inline: true,
