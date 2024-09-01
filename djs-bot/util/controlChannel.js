@@ -121,8 +121,6 @@ const handleMessageDelete = async (message) => {
 };
 
 const updateControlMessage = async (guildId, track) => {
-	console.log(`updateControlMessage GID: ${guildId}`)
-	console.log(`updateControlMessage track: ${track}`)
 	const message = await getControlChannelMessage(guildId);
 
 	if (!message) {
