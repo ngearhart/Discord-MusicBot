@@ -71,7 +71,8 @@ const command = new SlashCommand()
 		// 		],
 		// 	});
 		// }
-
+		console.log(interaction.guild.id);
+		console.log(channel);
 		let player = null;
 		const playerRetries = 10;
 		for (let i = 0; i < playerRetries; i++) {
@@ -84,7 +85,7 @@ const command = new SlashCommand()
 				});
 				break;
 			} catch (e) {
-				client.error(e);				
+				client.error(e);
 			}
 			await wait(1000);
 		}
