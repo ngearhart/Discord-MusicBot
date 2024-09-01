@@ -69,7 +69,12 @@ class Bot extends Client {
 		this.logger.log(data);
 	}
 	warn(...data) {
-		this.logger.warn(data);
+		if (this) {
+			this.logger.warn(data);
+		} else {
+			console.log("Warning: Client was garbage collected")
+			console.log(data);
+		}
 	}
 	info(...data) {
 		this.logger.info(data);

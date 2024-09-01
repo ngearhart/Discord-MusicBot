@@ -216,9 +216,10 @@ module.exports = (client) => {
 		.on("trackError", (player, err) => {
 			client.error(`Track has an error:`);
 			client.error(err);
+			throw err
 		})
 		.on("trackStuck", (player) => {
-			client.warn(`Track has an error: ${err.error}`);
+			client.warn(`Track (stuck) has an error: ${err.error}`);
 			errorEmbed
 				.setTitle("Track error!")
 				.setDescription(`\`\`\`${err.error}\`\`\``)

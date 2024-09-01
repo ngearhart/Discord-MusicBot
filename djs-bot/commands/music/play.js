@@ -3,6 +3,7 @@ const { EmbedBuilder } = require("discord.js");
 const { joinStageChannelRoutine, addTrack } = require("../../util/player");
 const { addQueueEmbed, loadedPlaylistEmbed, redEmbed } = require("../../util/embeds");
 const yt = require("youtube-sr").default;
+const wait = require('node:timers/promises').setTimeout;
 
 async function testUrlRegex(string) {
 	return [
@@ -43,20 +44,58 @@ const command = new SlashCommand()
 		return choices;
 	})
 	.setRun(async (client, interaction, options) => {
+		// If it takes more than 3 seconds to respond, Discord errors
+		// https://stackoverflow.com/questions/69501014/discordapierror-unknown-interaction-when-trying-to-send-info-about-a-command
+		// https://discordjs.guide/slash-commands/response-methods.html#deferred-responses
+		await interaction.deferReply({ ephemeral: true });
+
 		let channel = await client.getChannel(client, interaction);
 		if (!channel) {
 			return;
 		}
 
-		let node = await client.getLavalink(client);
-		if (!node) {
-			return interaction.reply({
+		// let node = await client.getLavalink(client);
+
+		// if (!node) {
+		// 	return interaction.editReply({
+		// 		embeds: [
+		// 			new EmbedBuilder()
+		// 				.setColor("Red")
+		// 				.setTitle("Node error!")
+		// 				.setDescription(
+		// 					`No available nodes to play music on!`
+		// 				)
+		// 				.setFooter({
+		// 					text: "Oops! something went wrong but it's not your fault!",
+		// 				}),
+		// 		],
+		// 	});
+		// }
+
+		let player = null;
+		const playerRetries = 10;
+		for (let i = 0; i < playerRetries; i++) {
+			try {
+				// await client.getLavalink(client);
+				player = client.manager.Engine.createPlayer({
+					guildId: interaction.guild.id,
+					voiceChannel: channel.id,
+					textChannel: interaction.channel.id,
+				});
+				break;
+			} catch (e) {
+				client.error(e);				
+			}
+			await wait(1000);
+		}
+		if (!player) {
+			return interaction.editReply({
 				embeds: [
 					new EmbedBuilder()
 						.setColor("Red")
 						.setTitle("Node error!")
 						.setDescription(
-							`No available nodes to play music on!`
+							`Could not connect to a node!`
 						)
 						.setFooter({
 							text: "Oops! something went wrong but it's not your fault!",
@@ -64,12 +103,6 @@ const command = new SlashCommand()
 				],
 			});
 		}
-
-		let player = client.manager.Engine.createPlayer({
-			guildId: interaction.guild.id,
-			voiceChannel: channel.id,
-			textChannel: interaction.channel.id,
-		});
 
 		if (player.state !== "CONNECTED") {
 			player.connect();
@@ -79,7 +112,7 @@ const command = new SlashCommand()
 			joinStageChannelRoutine(interaction.guild.members.me);
 		}
 
-		const ret = await interaction.reply({
+		const ret = await interaction.editReply({
 			embeds: [
 				new EmbedBuilder()
 					.setColor(client.config.embedColor)
