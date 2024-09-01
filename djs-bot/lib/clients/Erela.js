@@ -259,7 +259,7 @@ module.exports = (client) => {
 
 		.on("playerDestroy", (player) => {
 			client.warn(`Player: ${player.options.guild} | A music player has been destroyed in ${client.guilds.cache.get(player.options.guild) ? client.guilds.cache.get(player.options.guild).name : "a guild"}`)
-			updateControlMessage(player.options.guild);
+			updateControlMessage(player.guild);
 		})
 
 		.on("loadFailed", (node, type, error) =>

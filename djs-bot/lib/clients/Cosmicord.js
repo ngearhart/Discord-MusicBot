@@ -217,7 +217,7 @@ module.exports = (client) => {
 
 		.on("playerDestoryed", (node, player) => {
 			client.warn(`Player: ${player.guildId} | A music player has been destroyed in ${client.guilds.cache.get(player.guildId) ? client.guilds.cache.get(player.guildId).name : "a guild"}`)
-			updateControlMessage(player.guildId);
+			updateControlMessage(player);
 		})
 
                   // !TODO: integrate events with socket
