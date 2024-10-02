@@ -1,0 +1,131 @@
+services:
+  djs-bot:
+    container_name: djs-bot
+    build:
+      context: ..
+      dockerfile: ./docker/djs-bot/Dockerfile
+    restart: "unless-stopped"
+    healthcheck:
+      test: "curl --fail http://127.0.0.1:8080 || exit 1"
+      start_period: 30s
+      interval: 30s
+      retries: 5
+      timeout: 10s
+    init: true
+    environment:
+      - TOKEN=${TOKEN}
+      - CLIENTID=${CLIENTID}
+      - CLIENTSECRET=${CLIENTSECRET}
+      - DEVUID=${DEVUID}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    stdin_open: true
+    tty: true
+    volumes:
+      - ../djs-bot:/djs-bot
+    depends_on:
+      - postgres-db
+      - lavalink
+    networks:
+      - tfproxy
+      - default
+    working_dir: /djs-bot
+    command: ["npm", "run", "${ENABLE:-start}", "--loglevel=error"]
+    env_file:
+      - .env
+      - lavalink.env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dmb_papi.entrypoints=websecure"
+      - "traefik.http.routers.dmb_papi.tls=true"
+      - "traefik.http.routers.dmb_papi.rule=Host(`dmb-papi.example.com`)"
+      - "traefik.http.routers.dmb_papi.service=dmb_papi"
+      - "traefik.http.services.dmb_papi.loadbalancer.server.port=8080"
+      - "traefik.http.routers.dmb_pws.entrypoints=websecure"
+      - "traefik.http.routers.dmb_pws.tls=true"
+      - "traefik.http.routers.dmb_pws.rule=Host(`dmb-pws.example.com`)"
+      - "traefik.http.routers.dmb_pws.service=dmb_pws"
+      - "traefik.http.services.dmb_pws.loadbalancer.server.port=3001"
+      - "traefik.http.middlewares.cors.headers.accessControlAllowMethods=PUT,GET,OPTIONS"
+      - "traefik.http.middlewares.cors.headers.accessControlAllowHeaders=*"
+      - "traefik.http.middlewares.cors.headers.accessControlAllowOriginList=https://dmb.example.com"
+      - "traefik.http.middlewares.cors.headers.accessControlMaxAge=100"
+      - "traefik.http.middlewares.cors.headers.addVaryHeader=true"
+      - "traefik.http.middlewares.cors.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.cors.headers.referrerPolicy=origin-when-cross-origin"
+      - "traefik.http.routers.dmb_papi.middlewares=cors"
+      - "traefik.http.routers.dmb_pws.middlewares=cors"
+
+  dashboard:
+    container_name: dashboard
+    image: node:latest
+    restart: "unless-stopped"
+    healthcheck:
+      test: "curl --fail http://127.0.0.1:3000 || exit 1"
+      start_period: 40s
+      interval: 30s
+      retries: 5
+      timeout: 10s
+    init: true
+    stdin_open: true
+    tty: true
+    volumes:
+      - ../dashboard:/dashboard
+    depends_on:
+      - postgres-db
+      - lavalink
+    networks:
+      - tfproxy
+      - default
+    working_dir: /dashboard
+    command: sh -c "
+      npm config set fund false &&
+      npm config set audit false &&
+      npm run build-and-start
+      "
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dmb.entrypoints=websecure"
+      - "traefik.http.routers.dmb.tls=true"
+      - "traefik.http.routers.dmb.rule=Host(`dmb.example.com`)"
+      - "traefik.http.services.dmb.loadbalancer.server.port=3000"
+
+  postgres-db:
+    image: postgres:16.4-alpine
+    container_name: postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 5s
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+
+  lavalink:
+    image: fredboat/lavalink:3.7.12
+    container_name: dmb_lavalink
+    restart: unless-stopped
+    hostname: docker.lavalink
+    user: root
+    healthcheck:
+      test: 'curl -H "Authorization: $${LAVALINK_SERVER_PASSWORD}" -s http://127.0.0.1:$${SERVER_PORT}/version'
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 10s
+    volumes:
+      - ./lavalink/application.yml:/opt/Lavalink/application.yml
+      - ./lavalink/plugins/:/opt/Lavalink/plugins
+    env_file:
+      - lavalink.env
+
+volumes:
+  postgres_data:
+
+# Make the network frist: `docker network create -d bridge tfproxy`
+networks:
+  tfproxy:
+    external: true
